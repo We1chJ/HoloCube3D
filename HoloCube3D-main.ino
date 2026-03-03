@@ -1,6 +1,7 @@
 #include <TFT_eSPI.h>
 #include <SPI.h>
 
+// Change these includes to match your specific frame files
 #include "frame_000.h"
 #include "frame_001.h"
 #include "frame_002.h"
@@ -24,6 +25,7 @@
 #define FRAME_HEIGHT  240
 #define FRAME_DELAY   42
 
+// Change these includes to match your specific frame files
 const uint16_t* const frames[] PROGMEM = {
   frame_000,
   frame_001,
