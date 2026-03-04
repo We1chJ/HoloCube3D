@@ -1,45 +1,38 @@
-# HoloCube3D 🧊✨
+# HoloCube3D
 
-A compact, animated desktop companion powered by the **ESP32-S3-WROOM-1 (N16R8)**. This project uses a high-speed IPS display and a **Beam Splitting Cube** to create a pseudo-holographic 3D animation effect.
+A compact, animated desktop companion powered by the ESP32-S3-WROOM-1 (N16R8). This project uses a high-speed IPS display and a beam-splitting cube to create a pseudo-holographic 3D animation effect.
 
 ![HoloCube Device](https://m.media-amazon.com/images/I/418SW+HhY1L._AC_UF894,1000_QL80_.jpg)
 
----
+## Materials Used
+- Microcontroller: ESP32-S3-WROOM-1 (N16R8), 16MB Flash, 8MB PSRAM
+- Display: 1.3" IPS TFT LCD (240x240)
+- Optics: Beam-splitting cube
 
-## 🛠 Materials Used
-To build this version of the HoloCube3D, the following hardware is required:
+## Overview
+HoloCube3D renders an animation loop by drawing RGB565 frames from `gif_frames.h` to the TFT with `TFT_eSPI`.
 
-* **Microcontroller:** ESP32-S3-WROOM-1 (N16R8) with 16MB Flash and 8MB PSRAM.
-* **Display:** IPS 1.3 Inch TFT LCD Display (High contrast for better "floating" effects).
-* **Optics:** Beam Splitting Cube (Splits light to create the holographic reflection).
+## Current Animation Data
+The included `gif_frames.h` currently defines:
+- `FRAME_COUNT 5`
+- `FRAME_WIDTH 240`
+- `FRAME_HEIGHT 240`
 
----
+## File Structure
+- `HoloCube3D-main.ino`: Main Arduino sketch that initializes the display and plays frames.
+- `gif_frames.h`: Auto-generated frame data header (all frames + frame pointer array).
+- `gif-split.py`: GIF-to-RGB565 helper script for generating frame header files.
+- `User_Setup.h`: Display/pin configuration for `TFT_eSPI`.
 
-## 🚀 Overview
-The **HoloCube3D** renders smooth, high-frame-rate animations by cycling through pre-processed image frames stored directly in the ESP32-S3's memory. 
+## Quick Start
+1. Install [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) in Arduino IDE.
+2. Configure `User_Setup.h` for your ESP32-S3 and 240x240 TFT.
+3. Open `HoloCube3D-main.ino` in Arduino IDE.
+4. Keep `gif_frames.h` in the same sketch folder.
+5. Upload using ESP32-S3 board settings that match your hardware.
 
-### Featured Animation
-The repository includes a 18-frame looping animation:
+## Notes
+- `gif-split.py` currently writes `frame_XXX.h` files. If you prefer a single `gif_frames.h`, combine generated frames into one header with a frame pointer array (matching how `HoloCube3D-main.ino` reads `frames[f]`).
 
-![Animation Demo](https://media.tenor.com/d6YbAaUX9BQAAAAM/zero-two-smile.gif)
-
----
-
-## 📂 File Structure
-* `main.ino`: The primary Arduino sketch handling the LCD drivers and the animation loop.
-* `frame_xxx.h`: Header files containing the raw hex pixel data for each frame.
-
----
-
-## ⚙️ Quick Start
-1.  **Library Requirement:** Install the [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) library in your Arduino IDE.
-2.  **Configuration:** Edit `User_Setup.h` in the TFT_eSPI folder to match the pins for your **ESP32-S3** and **1.3" IPS LCD**.
-3.  **Flash Settings:** * **Board:** ESP32S3 Dev Module
-    * **PSRAM:** OPI (Required for N16R8)
-    * **Flash Mode:** QIO/OPI 80MHz
-4.  **Upload:** Open `main.ino` and upload. Ensure all `.h` files are in the same directory.
-
----
-
-## 📜 License
-This project is open-source. Feel free to swap the frame files to display your own custom 3D holograms!
+## License
+Open-source. Replace frame data to display your own hologram animations.
