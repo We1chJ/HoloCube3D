@@ -2,7 +2,7 @@
 
 A compact, animated desktop companion powered by the ESP32-S3-WROOM-1 (N16R8). This project uses a high-speed IPS display and a beam-splitting cube to create a pseudo-holographic 3D animation effect.
 
-![HoloCube Device](https://m.media-amazon.com/images/I/418SW+HhY1L._AC_UF894,1000_QL80_.jpg)
+![HoloCube Device](assets/Picture1.gif)
 
 ## Materials Used
 - Microcontroller: ESP32-S3-WROOM-1 (N16R8), 16MB Flash, 8MB PSRAM
