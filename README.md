@@ -4,6 +4,8 @@ A compact, animated desktop companion powered by the ESP32-S3-WROOM-1 (N16R8). T
 
 ![HoloCube Device](assets/Picture1.gif)
 
+[View Presentation](https://canva.link/rwkxsu6l7c77ncn)
+
 ## Materials Used
 - Microcontroller: ESP32-S3-WROOM-1 (N16R8), 16MB Flash, 8MB PSRAM
 - Display: 1.3" IPS TFT LCD (240x240)
