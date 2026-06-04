@@ -12,8 +12,8 @@
 
 // ── STREAM MODE config ────────────────────────────────────────────────────────
 #ifdef STREAM_MODE
-  #define DISP_W      120
-  #define DISP_H      120
+  #define DISP_W      240
+  #define DISP_H      240
   #define FRAME_BYTES (DISP_W * DISP_H * 2)  // full RGB565 frame from PC
 #endif
 // ─────────────────────────────────────────────────────────────────────────────
