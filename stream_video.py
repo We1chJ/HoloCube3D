@@ -35,8 +35,8 @@ import serial
 from PIL import Image
 
 # ── Must match DISP_W / DISP_H in HoloCube3D.ino ─────────────────────────────
-DISP_W = 240
-DISP_H = 240
+DISP_W = 120
+DISP_H = 120
 # ──────────────────────────────────────────────────────────────────────────────
 
 FRAME_BYTES = DISP_W * DISP_H * 2  # RGB565: 2 bytes per pixel
