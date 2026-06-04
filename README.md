@@ -78,7 +78,7 @@ Live video is sent from your PC to the device over USB Serial as full RGB565 fra
    ```
 
 **Notes:**
-- Baud rate defaults to 2 Mbaud in both sketch and script. Change `Serial.begin(2000000)` and `--baud` together if needed.
+- Baud rate defaults to 4 Mbaud in both sketch and script. Change `Serial.begin(4000000)` and `--baud` together if needed.
 - Frames are scaled to fit the display (240×240) with letterboxing — aspect ratio is always preserved.
 - To mirror horizontally (required for the holographic beam-splitting cube), uncomment `#define FLIP_V` in the sketch.
 - At 2 Mbaud, expect ~1–2 fps at 240×240. Reduce `DISP_W`/`DISP_H` in both the sketch and script for higher frame rates.

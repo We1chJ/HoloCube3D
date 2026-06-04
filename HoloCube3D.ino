@@ -60,7 +60,7 @@ TFT_eSPI tft = TFT_eSPI();
 void setup() {
 #ifdef STREAM_MODE
   Serial.setRxBufferSize(2048);
-  Serial.begin(2000000);  // 2 Mbaud — increase if you need more fps
+  Serial.begin(4000000);  // 4 Mbaud — increase if you need more fps
   while (!Serial);
   while (Serial.available() == 0) {
     Serial.println("READY");

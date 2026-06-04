@@ -111,8 +111,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Stream video to HoloCube3D")
     parser.add_argument("--port", required=True,
                         help="Serial port, e.g. COM4 or /dev/ttyACM0")
-    parser.add_argument("--baud", type=int, default=2000000,
-                        help="Baud rate — must match sketch (default 2000000)")
+    parser.add_argument("--baud", type=int, default=4000000,
+                        help="Baud rate — must match sketch (default 4000000)")
     parser.add_argument("--video",
                         help="Path to a video file. Omit to stream your screen.")
     parser.add_argument("--region", type=int, nargs=4,
