@@ -19,8 +19,9 @@ HoloCube3D renders an animation loop by pushing pre-baked frames to the TFT with
 
 ## File Structure
 - `HoloCube3D.ino`: Main Arduino sketch — initializes the display and plays frames in the selected mode.
+- `stream_video.py`: PC-side script for streaming a video file or screen capture over USB Serial (stream mode).
 - `ColoredVideoFrame.h`: RGB565 frame data header. Used in color mode. Currently not active.
-- `VideoFrame.h`: 1-bit packed frame data header. Used in binary mode. Currently active.
+- `VideoFrame.h`: 1-bit packed frame data header. Used in binary mode. Currently not active.
 - `gif-split.py`: GIF-to-RGB565 helper script for generating frame header files.
 - `User_Setup.h`: Display/pin configuration for `TFT_eSPI`.
 
@@ -56,7 +57,33 @@ The inner array size (e.g. `1024`) must equal `ceil(SRC_W * SRC_H / 8)`.
 
 ## Display Modes
 
-### Binary (1-bit) Mode — currently active
+### Stream Mode — currently active
+Live video is sent from your PC to the device over USB Serial as full RGB565 frames. No `.h` file needed.
+
+1. Install [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) in Arduino IDE.
+2. Copy `User_Setup.h` into the TFT_eSPI library folder (see Setup Gotcha below).
+3. Confirm `#define STREAM_MODE` is uncommented in `HoloCube3D.ino`.
+4. Upload. The display will show "nothing" until the Python script connects.
+5. Install Python dependencies:
+   ```
+   pip install pyserial mss Pillow numpy opencv-python
+   ```
+6. Run the streaming script:
+   ```
+   python stream_video.py --port COM4 --video myvideo.mp4
+   ```
+   Or stream your screen instead:
+   ```
+   python stream_video.py --port COM4
+   ```
+
+**Notes:**
+- Baud rate defaults to 2 Mbaud in both sketch and script. Change `Serial.begin(2000000)` and `--baud` together if needed.
+- Frames are scaled to fit the display (240×240) with letterboxing — aspect ratio is always preserved.
+- To mirror horizontally (required for the holographic beam-splitting cube), uncomment `#define FLIP_V` in the sketch.
+- At 2 Mbaud, expect ~1–2 fps at 240×240. Reduce `DISP_W`/`DISP_H` in both the sketch and script for higher frame rates.
+
+### Binary (1-bit) Mode — currently not active
 1. Install [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) in Arduino IDE.
 2. Copy `User_Setup.h` into the TFT_eSPI library folder (see Setup Gotcha below).
 3. Place `VideoFrame.h` in the sketch folder. Set `SRC_W` and `SRC_H` in the sketch to match your frame dimensions.
