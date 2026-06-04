@@ -12,16 +12,29 @@
 #ifdef BINARY_MODE
   #include "VideoFrame.h"
   // TOTAL_FRAMES and FRAME_DELAY come from VideoFrame.h
-  #define DISP_W    240
-  #define DISP_H    240
-  #define SRC_W     128
-  #define SRC_H      64
-  #define SCALED_W  240   // SRC_W scaled ×1.875 to fill display width
-  #define SCALED_H  120   // SRC_H scaled ×1.875 (keeps aspect ratio)
-  #define X_OFF       0
-  #define Y_OFF      60   // (240 - 120) / 2
+
+  // ── Change these two pairs to match your hardware and video ──
+  #define DISP_W  240   // display width  (pixels)
+  #define DISP_H  240   // display height (pixels)
+  #define SRC_W   128   // source frame width  (pixels)
+  #define SRC_H    64   // source frame height (pixels)
+  // ─────────────────────────────────────────────────────────────
+
+  // Scale to fit: whichever axis would overflow the display limits the scale.
+  // The other axis is centered with black bars. No distortion.
+  #if (SRC_W * DISP_H >= SRC_H * DISP_W)
+    // Width-limited
+    #define SCALED_W  DISP_W
+    #define SCALED_H  (SRC_H * DISP_W / SRC_W)
+  #else
+    // Height-limited
+    #define SCALED_H  DISP_H
+    #define SCALED_W  (SRC_W * DISP_H / SRC_H)
+  #endif
+  #define X_OFF  ((DISP_W - SCALED_W) / 2)
+  #define Y_OFF  ((DISP_H - SCALED_H) / 2)
 #else
-  #include "gif_frames.h"
+  #include "ColoredVideoFrame.h"
   #define DISP_W FRAME_WIDTH
   #define DISP_H FRAME_HEIGHT
   #define FRAME_DELAY 42

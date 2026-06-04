@@ -17,42 +17,63 @@ HoloCube3D renders an animation loop by pushing pre-baked frames to the TFT with
 - **RGB565 (default):** Full color, 16 bits per pixel. ~70 frames fit in 8 MB flash at 240×240.
 - **Binary (1-bit):** Black and white only, 1 bit per pixel. ~1,140 frames fit in the same flash — 16× more video for the same hardware.
 
-## Current Animation Data
-The included `gif_frames.h` currently defines:
-- `FRAME_COUNT 5`
-- `FRAME_WIDTH 240`
-- `FRAME_HEIGHT 240`
-
 ## File Structure
-- `HoloCube3D-main.ino`: Main Arduino sketch — initializes the display and plays frames in the selected mode.
-- `gif_frames.h`: RGB565 frame data header (all frames + `uint16_t` pointer array). Used in color mode.
-- `binary_frames.h`: 1-bit packed frame data header (all frames + `uint8_t` pointer array). Used in binary mode. **Not included** — you supply this.
+- `HoloCube3D.ino`: Main Arduino sketch — initializes the display and plays frames in the selected mode.
+- `ColoredVideoFrame.h`: RGB565 frame data header. Used in color mode. Currently not active.
+- `VideoFrame.h`: 1-bit packed frame data header. Used in binary mode. Currently active.
 - `gif-split.py`: GIF-to-RGB565 helper script for generating frame header files.
 - `User_Setup.h`: Display/pin configuration for `TFT_eSPI`.
 
+## Header File Formats
+
+The header file format differs depending on which mode is active in `HoloCube3D.ino`.
+
+### Color mode — `ColoredVideoFrame.h`
+Frames are stored as `uint16_t` RGB565 values (2 bytes per pixel). Each frame is a separate named array, and a pointer table is used to index them:
+```cpp
+#define FRAME_COUNT  5
+#define FRAME_WIDTH  240
+#define FRAME_HEIGHT 240
+
+const uint16_t frame_000[] PROGMEM = { 0xFFFF, 0x0000, ... };
+// ...
+const uint16_t* const frames[FRAME_COUNT] PROGMEM = { frame_000, ... };
+```
+
+### Binary mode — `VideoFrame.h`
+Frames are stored as packed 1-bit values (8 pixels per byte, MSB-first). All frames live in a single 2D array — no pointer table needed:
+```cpp
+const int TOTAL_FRAMES = 247;
+const int FRAME_DELAY  = 41;
+
+const unsigned char video_frames[][1024] PROGMEM = {
+  { 0xff, 0xff, ... },  // frame 0
+  { 0xff, 0xfe, ... },  // frame 1
+  // ...
+};
+```
+The inner array size (e.g. `1024`) must equal `ceil(SRC_W * SRC_H / 8)`.
+
 ## Display Modes
 
-### RGB565 Color Mode (default)
+### Binary (1-bit) Mode — currently active
 1. Install [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) in Arduino IDE.
 2. Copy `User_Setup.h` into the TFT_eSPI library folder (see Setup Gotcha below).
-3. Open `HoloCube3D-main.ino`. Confirm `// #define BINARY_MODE` is commented out.
-4. Keep `gif_frames.h` in the same sketch folder.
-5. Upload using ESP32-S3 board settings.
+3. Place `VideoFrame.h` in the sketch folder. Set `SRC_W` and `SRC_H` in the sketch to match your frame dimensions.
+4. Confirm `#define BINARY_MODE` is uncommented in `HoloCube3D.ino`.
+5. Upload. Each bit is expanded to `0xFFFF` (white) or `0x0000` (black) at runtime.
 
-### Binary (1-bit) Mode
+### RGB565 Color Mode
 1. Complete steps 1–2 above.
-2. Prepare `binary_frames.h` in the same sketch folder. It must define:
-   - `#define FRAME_COUNT`, `FRAME_WIDTH`, `FRAME_HEIGHT`
-   - Per-frame arrays: `const uint8_t frame_NNN[] PROGMEM` — bits packed MSB-first (8 pixels per byte)
-   - Pointer table: `const uint8_t* const frames[FRAME_COUNT] PROGMEM`
-3. In `HoloCube3D-main.ino`, uncomment `#define BINARY_MODE`.
-4. Upload. Each pixel is expanded to `0xFFFF` (white) or `0x0000` (black) at runtime.
+2. Place `ColoredVideoFrame.h` in the sketch folder (see format above).
+3. Comment out `#define BINARY_MODE` in `HoloCube3D.ino`.
+4. Upload.
 
 ## Setup Gotcha
 TFT_eSPI reads its config from `User_Setup.h` inside the **library folder**, not the sketch folder. Copy the repo's `User_Setup.h` into the installed library, or the display will not initialise correctly.
 
 ## Notes
-- `gif-split.py` currently writes `frame_XXX.h` files. If you prefer a single `gif_frames.h`, combine the generated frames into one header with a `uint16_t` pointer array (matching how the sketch reads `frames[f]`).
+- `gif-split.py` currently writes `frame_XXX.h` files. If you prefer a single `ColoredVideoFrame.h`, combine the generated frames into one header with a `uint16_t` pointer array (matching the color mode format above).
 
 ## License
 Open-source. Replace frame data to display your own hologram animations.
