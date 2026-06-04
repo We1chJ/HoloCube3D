@@ -5,9 +5,9 @@
 #define BINARY_MODE   // 1-bit 128×64 frames from VideoFrame.h, centered on 240×240
 // (neither = RGB565 from gif_frames.h)
 
-// Uncomment to flip the video vertically.
-// Enable this if using a holographic beam-splitting cube (it inverts the image).
-// #define FLIP_V
+// Uncomment to mirror the video horizontally (left↔right).
+// Enable this if using a holographic beam-splitting cube (it mirrors the image).
+#define FLIP_V
 
 #ifdef BINARY_MODE
   #include "VideoFrame.h"
@@ -45,13 +45,13 @@ void loop() {
     memset(frameBuf, 0, sizeof(frameBuf));
     const uint8_t* src = video_frames[f];
     for (int row = 0; row < SCALED_H; row++) {
-#ifdef FLIP_V
-      int sr = (SCALED_H - 1 - row) * SRC_H / SCALED_H;
-#else
       int sr = row * SRC_H / SCALED_H;
-#endif
       for (int col = 0; col < SCALED_W; col++) {
+#ifdef FLIP_V
+        int sc = (SCALED_W - 1 - col) * SRC_W / SCALED_W;
+#else
         int sc = col * SRC_W / SCALED_W;
+#endif
         int i = sr * SRC_W + sc;
         uint8_t b = pgm_read_byte(src + (i >> 3));
         frameBuf[(row + Y_OFF) * DISP_W + (col + X_OFF)] =
