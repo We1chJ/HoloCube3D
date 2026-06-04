@@ -21,9 +21,9 @@ Usage:
 
 Notes:
     - SRC_W / SRC_H below must match the values in HoloCube3D.ino.
-    - THRESHOLD controls how bright a pixel must be to show as white (0-255).
-    - The baud rate is ignored for ESP32-S3 native USB (it's USB CDC), but
-      pyserial still requires a value — 921600 is used as a convention.
+    - Frames are sent as RGB565 (2 bytes/pixel), byte-swapped to match
+      TFT_eSPI's setSwapBytes(false) convention.
+    - Baud rate must match Serial.begin() in the sketch (default 2000000).
 """
 
 import argparse
@@ -39,19 +39,22 @@ SRC_W = 128
 SRC_H = 64
 # ──────────────────────────────────────────────────────────────────────────────
 
-FRAME_BYTES = (SRC_W * SRC_H + 7) // 8
-THRESHOLD = 128  # pixels brighter than this → white; adjust for your content
+FRAME_BYTES = SRC_W * SRC_H * 2  # RGB565: 2 bytes per pixel
 
 
-def to_packed(img: Image.Image) -> bytes:
-    gray = img.resize((SRC_W, SRC_H), Image.LANCZOS).convert("L")
-    bw = np.array(gray) > THRESHOLD
-    return np.packbits(bw).tobytes()
+def to_rgb565(img: Image.Image) -> bytes:
+    arr = np.array(img.resize((SRC_W, SRC_H), Image.LANCZOS).convert("RGB"),
+                   dtype=np.uint16)
+    r, g, b = arr[:, :, 0] >> 3, arr[:, :, 1] >> 2, arr[:, :, 2] >> 3
+    rgb565 = (r << 11) | (g << 5) | b
+    # Byte-swap to match TFT_eSPI setSwapBytes(false) convention
+    swapped = ((rgb565 & 0xFF) << 8) | (rgb565 >> 8)
+    return swapped.astype(np.uint16).tobytes()
 
 
 def stream_screen(ser: serial.Serial, region: list[int]) -> None:
     try:
-        from mss import mss
+        from mss import MSS
     except ImportError:
         sys.exit("mss not found. Run: pip install mss")
 
@@ -61,11 +64,11 @@ def stream_screen(ser: serial.Serial, region: list[int]) -> None:
     frame_count = 0
     t_start = time.time()
 
-    with mss() as sct:
+    with MSS() as sct:
         while True:
             raw = sct.grab(monitor)
             img = Image.frombytes("RGB", (raw.width, raw.height), raw.rgb)
-            ser.write(to_packed(img))
+            ser.write(to_rgb565(img))
             ser.readline()          # wait for ACK ('\n') from device
             frame_count += 1
             if frame_count % 30 == 0:
@@ -92,7 +95,7 @@ def stream_video_file(ser: serial.Serial, path: str) -> None:
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)    # loop back to start
             continue
         img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        ser.write(to_packed(img))
+        ser.write(to_rgb565(img))
         ser.readline()              # wait for ACK
         frame_count += 1
         if frame_count % 30 == 0:
@@ -103,9 +106,9 @@ def stream_video_file(ser: serial.Serial, path: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stream video to HoloCube3D")
     parser.add_argument("--port", required=True,
-                        help="Serial port, e.g. COM3 or /dev/ttyACM0")
-    parser.add_argument("--baud", type=int, default=921600,
-                        help="Baud rate (default 921600; ignored for native USB)")
+                        help="Serial port, e.g. COM4 or /dev/ttyACM0")
+    parser.add_argument("--baud", type=int, default=2000000,
+                        help="Baud rate — must match sketch (default 2000000)")
     parser.add_argument("--video",
                         help="Path to a video file. Omit to stream your screen.")
     parser.add_argument("--region", type=int, nargs=4,
@@ -131,8 +134,8 @@ def main() -> None:
     # Default region: full primary monitor
     if args.region is None:
         try:
-            from mss import mss
-            with mss() as sct:
+            from mss import MSS
+            with MSS() as sct:
                 m = sct.monitors[1]   # primary monitor
                 region = [m["left"], m["top"], m["width"], m["height"]]
         except Exception:

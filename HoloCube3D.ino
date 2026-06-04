@@ -34,7 +34,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 #ifdef STREAM_MODE
-  #define FRAME_BYTES  ((SRC_W * SRC_H + 7) / 8)
+  #define FRAME_BYTES  (SRC_W * SRC_H * 2)  // RGB565: 2 bytes per pixel
 #elif defined(BINARY_MODE)
   #include "VideoFrame.h"
   // TOTAL_FRAMES and FRAME_DELAY come from VideoFrame.h
@@ -51,8 +51,8 @@ TFT_eSPI tft = TFT_eSPI();
 
 void setup() {
 #ifdef STREAM_MODE
-  Serial.setRxBufferSize(FRAME_BYTES + 16);
-  Serial.begin(921600);
+  Serial.setRxBufferSize(2048);
+  Serial.begin(2000000);  // 2 Mbaud — ~12 fps at 128×64 RGB565
   while (!Serial);
   // Keep sending READY every 500 ms until the PC starts sending frame data
   while (Serial.available() == 0) {
@@ -85,7 +85,8 @@ void loop() {
                                    min(avail, FRAME_BYTES - received));
   }
 
-  // Decode and display
+  // Scale and display (RGB565)
+  const uint16_t* srcPixels = (const uint16_t*)rxBuf;
   memset(frameBuf, 0, sizeof(frameBuf));
   for (int row = 0; row < SCALED_H; row++) {
     int sr = row * SRC_H / SCALED_H;
@@ -95,10 +96,7 @@ void loop() {
 #else
       int sc = col * SRC_W / SCALED_W;
 #endif
-      int i = sr * SRC_W + sc;
-      uint8_t b = rxBuf[i >> 3];
-      frameBuf[(row + Y_OFF) * DISP_W + (col + X_OFF)] =
-        (b >> (7 - (i & 7))) & 1 ? 0xFFFF : 0x0000;
+      frameBuf[(row + Y_OFF) * DISP_W + (col + X_OFF)] = srcPixels[sr * SRC_W + sc];
     }
   }
   tft.startWrite();
