@@ -10,8 +10,19 @@
 // Enable this if using a holographic beam-splitting cube (it mirrors the image).
 // #define FLIP_V
 
-// ── Shared config for STREAM_MODE and BINARY_MODE ────────────────────────────
-#if defined(STREAM_MODE) || defined(BINARY_MODE)
+// ── STREAM MODE config ────────────────────────────────────────────────────────
+#ifdef STREAM_MODE
+  #define DISP_W      240
+  #define DISP_H      240
+  #define FRAME_BYTES (DISP_W * DISP_H * 2)  // full RGB565 frame from PC
+#endif
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── BINARY MODE config ────────────────────────────────────────────────────────
+#ifdef BINARY_MODE
+  #include "VideoFrame.h"
+  // TOTAL_FRAMES and FRAME_DELAY come from VideoFrame.h
+
   // ── Change these two pairs to match your hardware and video ──
   #define DISP_W  240   // display width  (pixels)
   #define DISP_H  240   // display height (pixels)
@@ -19,7 +30,7 @@
   #define SRC_H    64   // source frame height (pixels)
   // ─────────────────────────────────────────────────────────────
 
-  // Scale to fit: whichever axis would overflow the display limits the scale.
+  // Scale to fit: whichever axis would overflow limits the scale.
   // The other axis is centered with black bars. No distortion.
   #if (SRC_W * DISP_H >= SRC_H * DISP_W)
     #define SCALED_W  DISP_W
@@ -33,17 +44,14 @@
 #endif
 // ─────────────────────────────────────────────────────────────────────────────
 
-#ifdef STREAM_MODE
-  #define FRAME_BYTES  (SRC_W * SRC_H * 2)  // RGB565: 2 bytes per pixel
-#elif defined(BINARY_MODE)
-  #include "VideoFrame.h"
-  // TOTAL_FRAMES and FRAME_DELAY come from VideoFrame.h
-#else
+// ── COLOR MODE config ─────────────────────────────────────────────────────────
+#if !defined(STREAM_MODE) && !defined(BINARY_MODE)
   #include "ColoredVideoFrame.h"
   #define DISP_W FRAME_WIDTH
   #define DISP_H FRAME_HEIGHT
   #define FRAME_DELAY 42
 #endif
+// ─────────────────────────────────────────────────────────────────────────────
 
 uint16_t frameBuf[DISP_W * DISP_H];
 
@@ -52,14 +60,12 @@ TFT_eSPI tft = TFT_eSPI();
 void setup() {
 #ifdef STREAM_MODE
   Serial.setRxBufferSize(2048);
-  Serial.begin(2000000);  // 2 Mbaud — ~12 fps at 128×64 RGB565
+  Serial.begin(2000000);  // 2 Mbaud — increase if you need more fps
   while (!Serial);
-  // Keep sending READY every 500 ms until the PC starts sending frame data
   while (Serial.available() == 0) {
     Serial.println("READY");
     delay(500);
   }
-  // Flush any partial bytes that arrived during handshake
   while (Serial.available()) Serial.read();
 #else
   Serial.begin(115200);
@@ -76,7 +82,6 @@ void loop() {
 #ifdef STREAM_MODE
   static uint8_t rxBuf[FRAME_BYTES];
 
-  // Read exactly one frame's worth of bytes
   int received = 0;
   while (received < FRAME_BYTES) {
     int avail = Serial.available();
@@ -85,20 +90,20 @@ void loop() {
                                    min(avail, FRAME_BYTES - received));
   }
 
-  // Scale and display (RGB565)
-  const uint16_t* srcPixels = (const uint16_t*)rxBuf;
-  memset(frameBuf, 0, sizeof(frameBuf));
-  for (int row = 0; row < SCALED_H; row++) {
-    int sr = row * SRC_H / SCALED_H;
-    for (int col = 0; col < SCALED_W; col++) {
 #ifdef FLIP_V
-      int sc = (SCALED_W - 1 - col) * SRC_W / SCALED_W;
-#else
-      int sc = col * SRC_W / SCALED_W;
-#endif
-      frameBuf[(row + Y_OFF) * DISP_W + (col + X_OFF)] = srcPixels[sr * SRC_W + sc];
+  // Mirror horizontally in-place before copying to frameBuf
+  uint16_t* px = (uint16_t*)rxBuf;
+  for (int row = 0; row < DISP_H; row++) {
+    uint16_t* rowPtr = px + row * DISP_W;
+    for (int col = 0; col < DISP_W / 2; col++) {
+      uint16_t tmp = rowPtr[col];
+      rowPtr[col] = rowPtr[DISP_W - 1 - col];
+      rowPtr[DISP_W - 1 - col] = tmp;
     }
   }
+#endif
+
+  memcpy(frameBuf, rxBuf, sizeof(frameBuf));
   tft.startWrite();
   tft.setAddrWindow(0, 0, DISP_W, DISP_H);
   tft.pushPixels(frameBuf, DISP_W * DISP_H);

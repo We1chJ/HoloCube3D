@@ -34,20 +34,20 @@ import numpy as np
 import serial
 from PIL import Image
 
-# ── Must match SRC_W / SRC_H in HoloCube3D.ino ────────────────────────────────
-SRC_W = 128
-SRC_H = 64
+# ── Must match DISP_W / DISP_H in HoloCube3D.ino ─────────────────────────────
+DISP_W = 240
+DISP_H = 240
 # ──────────────────────────────────────────────────────────────────────────────
 
-FRAME_BYTES = SRC_W * SRC_H * 2  # RGB565: 2 bytes per pixel
+FRAME_BYTES = DISP_W * DISP_H * 2  # RGB565: 2 bytes per pixel
 
 
 def to_rgb565(img: Image.Image) -> bytes:
-    # Scale to fit within SRC_W x SRC_H (no distortion), then letterbox
+    # Scale to fit DISP_W x DISP_H preserving aspect ratio, then letterbox
     img = img.convert("RGB")
-    img.thumbnail((SRC_W, SRC_H), Image.LANCZOS)
-    canvas = Image.new("RGB", (SRC_W, SRC_H), (0, 0, 0))
-    canvas.paste(img, ((SRC_W - img.width) // 2, (SRC_H - img.height) // 2))
+    img.thumbnail((DISP_W, DISP_H), Image.LANCZOS)
+    canvas = Image.new("RGB", (DISP_W, DISP_H), (0, 0, 0))
+    canvas.paste(img, ((DISP_W - img.width) // 2, (DISP_H - img.height) // 2))
     arr = np.array(canvas, dtype=np.uint16)
     r, g, b = arr[:, :, 0] >> 3, arr[:, :, 1] >> 2, arr[:, :, 2] >> 3
     rgb565 = (r << 11) | (g << 5) | b
