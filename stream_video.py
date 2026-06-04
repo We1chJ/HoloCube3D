@@ -43,8 +43,12 @@ FRAME_BYTES = SRC_W * SRC_H * 2  # RGB565: 2 bytes per pixel
 
 
 def to_rgb565(img: Image.Image) -> bytes:
-    arr = np.array(img.resize((SRC_W, SRC_H), Image.LANCZOS).convert("RGB"),
-                   dtype=np.uint16)
+    # Scale to fit within SRC_W x SRC_H (no distortion), then letterbox
+    img = img.convert("RGB")
+    img.thumbnail((SRC_W, SRC_H), Image.LANCZOS)
+    canvas = Image.new("RGB", (SRC_W, SRC_H), (0, 0, 0))
+    canvas.paste(img, ((SRC_W - img.width) // 2, (SRC_H - img.height) // 2))
+    arr = np.array(canvas, dtype=np.uint16)
     r, g, b = arr[:, :, 0] >> 3, arr[:, :, 1] >> 2, arr[:, :, 2] >> 3
     rgb565 = (r << 11) | (g << 5) | b
     # Byte-swap to match TFT_eSPI setSwapBytes(false) convention
