@@ -2,8 +2,8 @@
 #include <SPI.h>
 
 // Uncomment exactly one mode:
-// #define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
-#define BINARY_MODE     // 1-bit frames from VideoFrame.h
+#define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
+// #define BINARY_MODE     // 1-bit frames from VideoFrame.h
 // (neither = RGB565 from ColoredVideoFrame.h)
 
 // Uncomment to mirror the video horizontally (left↔right).
@@ -53,8 +53,14 @@ void setup() {
 #ifdef STREAM_MODE
   Serial.setRxBufferSize(FRAME_BYTES + 16);
   Serial.begin(921600);
-  while (!Serial);        // wait for USB connection
-  Serial.println("READY");
+  while (!Serial);
+  // Keep sending READY every 500 ms until the PC starts sending frame data
+  while (Serial.available() == 0) {
+    Serial.println("READY");
+    delay(500);
+  }
+  // Flush any partial bytes that arrived during handshake
+  while (Serial.available()) Serial.read();
 #else
   Serial.begin(115200);
 #endif

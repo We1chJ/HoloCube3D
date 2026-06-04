@@ -116,14 +116,11 @@ def main() -> None:
 
     print(f"Connecting to {args.port}...")
     try:
-        ser = serial.Serial(args.port, args.baud, timeout=5)
+        ser = serial.Serial(args.port, args.baud, timeout=10)
     except serial.SerialException as e:
         sys.exit(f"Could not open port: {e}")
 
-    time.sleep(2)   # give ESP32 time to reset after the serial connection opens
-
     print("Waiting for device READY signal...")
-    ser.reset_input_buffer()
     while True:
         line = ser.readline().decode(errors="ignore").strip()
         if line == "READY":
