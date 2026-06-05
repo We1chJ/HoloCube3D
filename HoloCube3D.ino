@@ -2,8 +2,8 @@
 #include <SPI.h>
 
 // Uncomment exactly one mode:
-// #define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
-#define BINARY_MODE     // 1-bit frames from VideoFrame.h
+#define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
+// #define BINARY_MODE     // 1-bit frames from VideoFrame.h
 // (neither = RGB565 from ColoredVideoFrame.h)
 
 // Uncomment to mirror the video horizontally (left↔right).
