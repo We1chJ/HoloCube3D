@@ -2,8 +2,8 @@
 #include <SPI.h>
 
 // Uncomment exactly one mode:
-#define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
-// #define BINARY_MODE     // 1-bit frames from VideoFrame.h
+// #define STREAM_MODE  // live stream from PC over USB — run stream_video.py on your computer
+#define BINARY_MODE     // 1-bit frames from VideoFrame.h
 // (neither = RGB565 from ColoredVideoFrame.h)
 
 // Uncomment to mirror the video horizontally (left↔right).
@@ -12,8 +12,8 @@
 
 // ── STREAM MODE config ────────────────────────────────────────────────────────
 #ifdef STREAM_MODE
-  #define DISP_W      240
-  #define DISP_H      240
+  #define DISP_W      160
+  #define DISP_H      128
   #define FRAME_BYTES (DISP_W * DISP_H * 2)  // full RGB565 frame from PC
 #endif
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,8 +24,8 @@
   // TOTAL_FRAMES and FRAME_DELAY come from VideoFrame.h
 
   // ── Change these two pairs to match your hardware and video ──
-  #define DISP_W  240   // display width  (pixels)
-  #define DISP_H  240   // display height (pixels)
+  #define DISP_W  160   // display width  (pixels)
+  #define DISP_H  128   // display height (pixels)
   #define SRC_W   128   // source frame width  (pixels)
   #define SRC_H    64   // source frame height (pixels)
   // ─────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ void setup() {
 #endif
 
   tft.init();
-  tft.setRotation(0);
+  tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
   tft.setSwapBytes(false);
 }
